@@ -1,0 +1,22 @@
+# Dependencies and build output
+node_modules/
+dist/
+
+# Local environment and editor files
+.DS_Store
+.claude/
+.env
+.env.*
+!.env.example
+
+# Private WhatsApp exports
+*.zip
+*.txt
+
+# Local design references
+/Whatsapp chat analysis UI.webp
+/Whatsapp chat analysis sticker board.webp
+
+# Logs
+*.log
+npm-debug.log*

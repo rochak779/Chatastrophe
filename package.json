@@ -1,0 +1,19 @@
+{
+  "name": "chatastrophe",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fontsource-variable/bricolage-grotesque": "^5.3.0",
+    "jszip": "^3.10.1"
+  },
+  "devDependencies": {
+    "vite": "^7.1.2",
+    "vitest": "^3.2.4"
+  }
+}
