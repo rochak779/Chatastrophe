@@ -6,7 +6,7 @@ Chatastrophe is a private, browser-based analyser for exported WhatsApp group ch
 
 Message text is never displayed. The selected export is processed locally in the browser and is not uploaded to a server.
 
-[**Try Chatastrophe →**](((https://chatastrophe-rho.vercel.app/))
+[**Try Chatastrophe →**](https://chatastrophe-rho.vercel.app/)
 
 ![Chatastrophe landing page](assets/chatastrophe-landing.png)
 
@@ -20,7 +20,7 @@ Message text is never displayed. The selected export is processed locally in the
 - CSV summary downloads
 - Responsive desktop and mobile layouts
 - Support for common Android and iPhone export formats
-- Local-only processing with no analytics, database, or upload endpoint
+- Local-only chat processing with no database or upload endpoint
 
 ## Privacy
 
@@ -32,6 +32,7 @@ Chatastrophe is designed so private chat data does not need to leave the device.
 - CSV reports are generated locally.
 - Fonts are bundled with the application rather than requested from an external font service.
 - Selecting a file does not make a network request containing the chat or its media.
+- The deployed site uses Vercel Web Analytics for site-usage metrics; Chatastrophe does not pass selected files, chat contents, or media to it.
 
 When deployed as a static website, the hosting provider serves the application files but does not receive the selected WhatsApp export through Chatastrophe.
 
