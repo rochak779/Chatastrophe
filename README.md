@@ -6,7 +6,7 @@ Chatastrophe is a private, browser-based analyser for exported WhatsApp group ch
 
 Message text is never displayed. The selected export is processed locally in the browser and is not uploaded to a server.
 
-[**Try Chatastrophe →**](ADD_DEPLOYED_URL_HERE)
+[**Try Chatastrophe →**](((https://chatastrophe-rho.vercel.app/))
 
 ![Chatastrophe landing page](assets/chatastrophe-landing.png)
 
