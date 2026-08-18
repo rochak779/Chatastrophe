@@ -2,6 +2,10 @@ import JSZip from 'jszip';
 import '@fontsource-variable/bricolage-grotesque';
 import { classifyMessage, parseTranscript, participantDisplayNames, summarize, TYPES } from './parser.js';
 import './style.css';
+import { inject } from '@vercel/analytics';
+
+// Initialize Vercel Analytics
+inject();
 
 const labels = {
   text: 'Text', sticker: 'Stickers', gif: 'GIFs', image: 'Images', video: 'Videos',
