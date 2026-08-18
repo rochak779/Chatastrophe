@@ -2,7 +2,7 @@
 
 **Turn your WhatsApp chats into a playful recap. Find out who sends what.**
 
-Chatastrophe is a private, browser-based analyzer for exported WhatsApp group chats. Drop in a chat export to explore the group's most-used stickers and GIFs, compare participant activity, and browse the media each person sent.
+Chatastrophe is a private, browser-based analyser for exported WhatsApp group chats. Drop in a chat export to explore the group's most-used stickers and GIFs, compare participant activity, and browse the media each person sent.
 
 Message text is never displayed. The selected export is processed locally in the browser and is not uploaded to a server.
 
@@ -39,7 +39,7 @@ When deployed as a static website, the hosting provider serves the application f
 
 For the most complete analysis:
 
-1. Open the WhatsApp group on your phone.
+1. Open the WhatsApp group on your phone or desktop
 2. Open the group information or chat menu.
 3. Select **Export chat**.
 4. Choose **Include media**.
@@ -114,15 +114,17 @@ The main parser is in `src/parser.js`; application behavior is in `src/main.js`;
 
 ### Media classification
 
-| Category | Common export indicators |
-| --- | --- |
-| Sticker | `.webp`, `STK-`, or `STICKER-` filenames |
-| GIF | `.gif`, `GIF-` filenames, or GIF transcript markers |
-| Image | `.jpg`, `.jpeg`, `.png`, `.heic`, `IMG-`, or `PHOTO-` |
-| Video | `.mp4`, `.mov`, `.3gp`, or `VID-` |
-| Voice note | `PTT-` or voice-note transcript markers |
-| Audio | `.opus`, `.ogg`, `.m4a`, `.mp3`, `.wav`, or `AUD-` |
-| Document | PDF, Word, Excel, PowerPoint, and ZIP attachments |
+
+| Category   | Common export indicators                              |
+| ---------- | ----------------------------------------------------- |
+| Sticker    | `.webp`, `STK-`, or `STICKER-` filenames              |
+| GIF        | `.gif`, `GIF-` filenames, or GIF transcript markers   |
+| Image      | `.jpg`, `.jpeg`, `.png`, `.heic`, `IMG-`, or `PHOTO-` |
+| Video      | `.mp4`, `.mov`, `.3gp`, or `VID-`                     |
+| Voice note | `PTT-` or voice-note transcript markers               |
+| Audio      | `.opus`, `.ogg`, `.m4a`, `.mp3`, `.wav`, or `AUD-`    |
+| Document   | PDF, Word, Excel, PowerPoint, and ZIP attachments     |
+
 
 ## Testing
 
