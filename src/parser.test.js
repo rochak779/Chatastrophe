@@ -21,6 +21,27 @@ describe('WhatsApp export parser', () => {
     expect(classifyMessage('<Media omitted>').type).toBe('unknownMedia');
   });
 
+  it('merges saved and unsaved versions of the same WhatsApp contact', () => {
+    const rows = parseTranscript([
+      '[15/08/2026, 10:20:01] Morgan Lee: hello',
+      '[15/08/2026, 10:21:01] ~\u202fMorgan Lee: STK-20260815-WA0001.webp (file attached)',
+    ].join('\n'));
+    expect(summarize(rows)).toEqual([
+      expect.objectContaining({ sender: 'Morgan Lee', total: 2, text: 1, sticker: 1 }),
+    ]);
+  });
+
+  it('does not treat group-title system notices as a participant', () => {
+    const rows = parseTranscript([
+      '[15/08/2026, 10:20:01] Weekend Plans: \u200eMessages and calls are end-to-end encrypted.',
+      '[15/08/2026, 10:21:01] Alex Morgan: hello',
+      '[15/08/2026, 10:22:01] Weekend Plans: \u200eAlex changed the group settings.',
+    ].join('\n'), { groupTitle: 'Weekend Plans' });
+    expect(summarize(rows)).toEqual([
+      expect.objectContaining({ sender: 'Alex Morgan', total: 1 }),
+    ]);
+  });
+
   it('removes WhatsApp contact markers and disambiguates duplicate first names', () => {
     const rows = [
       { sender: '~\u202fAlex Morgan' },
