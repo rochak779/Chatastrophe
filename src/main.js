@@ -13,7 +13,7 @@ const labels = {
 };
 
 document.querySelector('#app').innerHTML = `
-  <nav class="nav">
+  <nav class="nav" aria-label="Primary navigation">
     <a class="brand" href="#"><span>C</span> Chatastrophe</a>
     <div class="privacy-pill"><i></i> Local & private</div>
   </nav>
@@ -30,7 +30,7 @@ document.querySelector('#app').innerHTML = `
         <div class="chat-card card-three"><span class="card-emoji"><span class="gif-placeholder"><b>G</b><b>I</b><b>F</b></span></span><small>12 GIFs</small></div>
       </div>
       <label class="dropzone" id="dropzone">
-        <input id="file" type="file" accept=".zip,.txt,text/plain,application/zip" />
+        <input id="file" type="file" accept=".zip,.txt,text/plain,application/zip" aria-label="Choose a WhatsApp chat export" />
         <span class="upload-icon">＋</span>
         <span class="drop-label"><strong>Drop your chats</strong><small>.zip works best</small></span>
       </label>
@@ -84,6 +84,7 @@ async function analyze(file) {
   status.textContent = `Reading ${file.name}…`;
   results.hidden = true;
   dropzone.classList.add('processing');
+  dropzone.setAttribute('aria-busy', 'true');
   fileInput.disabled = true;
   try {
     setHeroGif();
@@ -92,7 +93,9 @@ async function analyze(file) {
     const messages = parseTranscript(text, { groupTitle });
     if (!messages.length) throw new Error('No messages were recognized. The export format may not be supported yet.');
     status.textContent = 'Preparing media previews…';
-    const mediaByUser = await prepareMedia(messages, mediaEntries);
+    const mediaByUser = await prepareMedia(messages, mediaEntries, (done, total) => {
+      status.textContent = `Preparing media previews… ${done.toLocaleString()} of ${total.toLocaleString()}`;
+    });
     setHeroGif(mediaByUser);
     render(summarize(messages), mediaByUser, buildMilestones(messages), messages.length, file.name);
     status.textContent = '';
@@ -100,6 +103,7 @@ async function analyze(file) {
     status.textContent = error.message;
   } finally {
     dropzone.classList.remove('processing');
+    dropzone.removeAttribute('aria-busy');
     fileInput.disabled = false;
   }
 }
@@ -110,7 +114,7 @@ function setHeroGif(mediaByUser) {
   const gif = mediaByUser
     ? [...mediaByUser.values()].flat().find((item) => item.type === 'gif' && item.available)
     : null;
-  if (!gif) {
+  if (!gif || prefersReducedMotion()) {
     container.innerHTML = '<span class="gif-placeholder"><b>G</b><b>I</b><b>F</b></span>';
     return;
   }
@@ -119,25 +123,32 @@ function setHeroGif(mediaByUser) {
     : `<video class="hero-gif-media" src="${gif.url}" muted autoplay loop playsinline></video>`;
 }
 
-async function prepareMedia(messages, entries) {
+async function prepareMedia(messages, entries, reportProgress = () => {}) {
   const mediaByUser = new Map();
+  const mediaMessages = messages.filter((message) => classifyMessage(message.content).type !== 'text');
+  let completed = 0;
   for (const message of messages) {
     const classification = classifyMessage(message.content);
     if (classification.type === 'text') continue;
     const item = { ...classification, date: message.date, time: message.time, url: '', available: false };
     const entry = classification.filename ? entries.get(normalizeFilename(classification.filename)) : null;
     if (entry) {
-      const bytes = await entry.async('arraybuffer');
-      const blob = new Blob([bytes], { type: mimeType(classification.filename) });
+      const rawBlob = await entry.async('blob');
+      const blob = rawBlob.slice(0, rawBlob.size, mimeType(classification.filename));
       item.url = URL.createObjectURL(blob);
       item.available = true;
       if (['sticker', 'gif'].includes(classification.type)) {
-        item.fingerprint = await fingerprint(bytes, classification.filename);
+        item.fingerprint = await fingerprint(await blob.arrayBuffer(), classification.filename);
       }
       activeObjectUrls.push(item.url);
     }
     if (!mediaByUser.has(message.sender)) mediaByUser.set(message.sender, []);
     mediaByUser.get(message.sender).push(item);
+    completed += 1;
+    if (completed === mediaMessages.length || completed % 8 === 0) {
+      reportProgress(completed, mediaMessages.length);
+      await yieldToBrowser();
+    }
   }
   return mediaByUser;
 }
@@ -149,7 +160,7 @@ function render(rows, mediaByUser, milestones, messageCount, filename) {
   const gifCount = rows.reduce((sum, row) => sum + row.gif, 0);
   const voiceCount = rows.reduce((sum, row) => sum + row.voiceNote, 0);
   results.innerHTML = `
-    <nav class="result-nav"><a href="#overview">Overview</a><a href="#top-media">Top media</a><a href="#scoreboard">Scoreboard</a><a href="#participants">Participants</a></nav>
+    <nav class="result-nav" aria-label="Replay sections"><a href="#overview" aria-current="true">Overview</a><a href="#top-media">Top media</a><a href="#scoreboard">Scoreboard</a><a href="#participants">Participants</a></nav>
     <div class="results-kicker" id="overview"><span>YOUR REPLAY</span><p>${escapeHtml(filename)}</p></div>
     <div class="summary">
       <div class="stat stat-blue"><small>People in the chaos</small><span data-count="${rows.length}">${rows.length}</span><b>participants</b></div>
@@ -161,7 +172,7 @@ function render(rows, mediaByUser, milestones, messageCount, filename) {
     <div id="top-media">${stickerBoard(rows, mediaByUser)}</div>
     <section class="leaderboard-card" id="scoreboard">
       <div class="table-heading"><div><h2>The scoreboard</h2><p>Powered Entirely by Stickers</p></div><button id="csv">↓ Download CSV</button></div>
-      <div class="leader-tabs">${[['total','All'],['sticker','Stickers'],['gif','GIFs'],['voiceNote','Voice'],['image','Images']].map(([type,label]) => `<button class="leader-tab ${type === 'total' ? 'active' : ''}" data-type="${type}">${label}</button>`).join('')}</div>
+      <div class="leader-tabs" aria-label="Scoreboard category">${[['total','All'],['sticker','Stickers'],['gif','GIFs'],['voiceNote','Voice'],['image','Images']].map(([type,label]) => `<button class="leader-tab ${type === 'total' ? 'active' : ''}" data-type="${type}" aria-pressed="${type === 'total'}">${label}</button>`).join('')}</div>
       <div id="leader-list" class="leader-list"></div>
       <button id="leader-more" class="outline-action"></button>
     </section>
@@ -174,7 +185,7 @@ function render(rows, mediaByUser, milestones, messageCount, filename) {
         <button id="media-more" class="outline-action"></button>
       </div>
     </section>
-    <dialog id="media-modal"><button class="modal-close" aria-label="Close">×</button><div id="modal-content"></div></dialog>`;
+    <dialog id="media-modal" aria-label="Media preview"><button class="modal-close" aria-label="Close media preview">×</button><div id="modal-content"></div></dialog>`;
   results.hidden = false;
   document.querySelector('#csv').addEventListener('click', (event) => {
     downloadCsv(rows);
@@ -194,7 +205,7 @@ function moveToReplay() {
 }
 
 function playReplayUnlock(rows, mediaByUser, messageCount) {
-  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduceMotion = prefersReducedMotion();
   document.querySelectorAll('[data-count]').forEach((element) => {
     const target = Number(element.dataset.count);
     if (reduceMotion) {
@@ -267,7 +278,11 @@ function setupLeaderboard(rows, displayNames, mediaByUser, milestones) {
   document.querySelectorAll('.leader-tab').forEach((button) => button.addEventListener('click', () => {
     category = button.dataset.type;
     expanded = false;
-    document.querySelectorAll('.leader-tab').forEach((tab) => tab.classList.toggle('active', tab === button));
+    document.querySelectorAll('.leader-tab').forEach((tab) => {
+      const selected = tab === button;
+      tab.classList.toggle('active', selected);
+      tab.setAttribute('aria-pressed', String(selected));
+    });
     draw();
   }));
   more.addEventListener('click', () => { expanded = !expanded; draw(); });
@@ -323,7 +338,12 @@ function openParticipant(sender) {
   const section = document.querySelector('#participants');
   const behavior = matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
   section.scrollIntoView({ behavior, block: 'start' });
-  document.querySelectorAll('.result-nav a').forEach((link) => link.classList.toggle('active', link.getAttribute('href') === '#participants'));
+  document.querySelectorAll('.result-nav a').forEach((link) => {
+    const selected = link.getAttribute('href') === '#participants';
+    link.classList.toggle('active', selected);
+    if (selected) link.setAttribute('aria-current', 'true');
+    else link.removeAttribute('aria-current');
+  });
 }
 
 function setupParticipantExplorer(rows, mediaByUser, displayNames) {
@@ -341,7 +361,7 @@ function setupParticipantExplorer(rows, mediaByUser, displayNames) {
   const person = document.querySelector('#explorer-person');
   const more = document.querySelector('#media-more');
 
-  rail.innerHTML = people.map((row, index) => `<button class="participant-chip ${index === 0 ? 'active' : ''}" data-sender="${escapeHtml(row.sender)}"><span class="avatar">${escapeHtml(initials(displayNames.get(row.sender)))}</span>${escapeHtml(displayNames.get(row.sender))}</button>`).join('');
+  rail.innerHTML = people.map((row, index) => `<button class="participant-chip ${index === 0 ? 'active' : ''}" data-sender="${escapeHtml(row.sender)}" aria-pressed="${index === 0}"><span class="avatar">${escapeHtml(initials(displayNames.get(row.sender)))}</span>${escapeHtml(displayNames.get(row.sender))}</button>`).join('');
 
   const draw = () => {
     const row = rows.find((item) => item.sender === activeSender);
@@ -349,7 +369,7 @@ function setupParticipantExplorer(rows, mediaByUser, displayNames) {
     const allItems = deduplicateParticipantMedia(rawItems);
     const availableTypes = TYPES.filter((type) => type !== 'text' && rawItems.some((item) => item.type === type));
     if (activeType !== 'all' && !availableTypes.includes(activeType)) activeType = 'all';
-    filters.innerHTML = [`<button class="media-filter ${activeType === 'all' ? 'active' : ''}" data-type="all">All <b>${rawItems.length}</b></button>`, ...availableTypes.map((type) => `<button class="media-filter ${activeType === type ? 'active' : ''}" data-type="${type}">${labels[type]} <b>${row[type]}</b></button>`)].join('');
+    filters.innerHTML = [`<button class="media-filter ${activeType === 'all' ? 'active' : ''}" data-type="all" aria-pressed="${activeType === 'all'}">All <b>${rawItems.length}</b></button>`, ...availableTypes.map((type) => `<button class="media-filter ${activeType === type ? 'active' : ''}" data-type="${type}" aria-pressed="${activeType === type}">${labels[type]} <b>${row[type]}</b></button>`)].join('');
     let filtered = activeType === 'all' ? allItems : allItems.filter((item) => item.type === activeType);
     if (['sticker', 'gif'].includes(activeType)) {
       filtered = filtered
@@ -364,16 +384,19 @@ function setupParticipantExplorer(rows, mediaByUser, displayNames) {
     more.hidden = filtered.length <= 8;
     more.textContent = expanded ? 'Show less' : `Show ${filtered.length - 8} more`;
     filters.querySelectorAll('.media-filter').forEach((button) => button.addEventListener('click', () => { activeType = button.dataset.type; expanded = false; draw(); }));
-    grid.querySelectorAll('.media-tile[data-previewable="true"]').forEach((tile) => tile.addEventListener('click', (event) => {
-      if (event.target.closest('audio, video[controls], a')) return;
-      openMediaModal(shown[Number(tile.dataset.index)]);
+    grid.querySelectorAll('.preview-action').forEach((button) => button.addEventListener('click', () => {
+      openMediaModal(shown[Number(button.dataset.index)]);
     }));
   };
   rail.querySelectorAll('.participant-chip').forEach((button) => button.addEventListener('click', () => {
     activeSender = button.dataset.sender;
     activeType = 'all';
     expanded = false;
-    rail.querySelectorAll('.participant-chip').forEach((chip) => chip.classList.toggle('active', chip === button));
+    rail.querySelectorAll('.participant-chip').forEach((chip) => {
+      const selected = chip === button;
+      chip.classList.toggle('active', selected);
+      chip.setAttribute('aria-pressed', String(selected));
+    });
     draw();
   }));
   more.addEventListener('click', () => { expanded = !expanded; draw(); });
@@ -382,7 +405,12 @@ function setupParticipantExplorer(rows, mediaByUser, displayNames) {
 
 function setupResultNavigation() {
   document.querySelectorAll('.result-nav a').forEach((link) => link.addEventListener('click', () => {
-    document.querySelectorAll('.result-nav a').forEach((item) => item.classList.toggle('active', item === link));
+    document.querySelectorAll('.result-nav a').forEach((item) => {
+      const selected = item === link;
+      item.classList.toggle('active', selected);
+      if (selected) item.setAttribute('aria-current', 'true');
+      else item.removeAttribute('aria-current');
+    });
   }));
 }
 
@@ -406,6 +434,9 @@ function stickerBoard(rows, mediaByUser) {
 }
 
 function wallMedia(item) {
+  if (prefersReducedMotion() && item.type === 'gif') {
+    return '<span class="motion-placeholder"><b>GIF</b><small>Preview paused</small></span>';
+  }
   if (item.type === 'gif' && !item.filename.toLowerCase().endsWith('.gif')) {
     return `<video src="${item.url}" muted autoplay loop playsinline aria-label="Popular GIF"></video>`;
   }
@@ -417,6 +448,8 @@ function mediaTile(item, index = 0) {
   let preview;
   if (!item.available) {
     preview = `<div class="missing"><span>File unavailable</span><small>Export with media to preview</small></div>`;
+  } else if (item.type === 'gif' && prefersReducedMotion()) {
+    preview = '<div class="motion-placeholder"><b>GIF</b><small>Open to play</small></div>';
   } else if (['sticker', 'image'].includes(item.type) || (item.type === 'gif' && item.filename.toLowerCase().endsWith('.gif'))) {
     preview = `<img src="${item.url}" alt="${name}" loading="lazy">`;
   } else if (['gif', 'video'].includes(item.type)) {
@@ -427,7 +460,7 @@ function mediaTile(item, index = 0) {
     preview = `<a class="document-preview" href="${item.url}" download="${name}"><span>↓</span><strong>Download file</strong></a>`;
   }
   const previewable = item.available && ['sticker', 'gif', 'image', 'video'].includes(item.type);
-  return `<article class="media-tile" data-index="${index}" data-previewable="${previewable}"><div class="preview ${item.type}">${preview}${item.duplicateCount > 1 ? `<b class="media-count">×${item.duplicateCount}</b>` : ''}</div><div class="media-meta"><span>${labels[item.type]}</span><time>${escapeHtml(item.date)} · ${escapeHtml(item.time)}</time></div></article>`;
+  return `<article class="media-tile"><div class="preview ${item.type}">${preview}${item.duplicateCount > 1 ? `<b class="media-count">×${item.duplicateCount}</b>` : ''}${previewable ? `<button class="preview-action" data-index="${index}" aria-label="Open ${escapeHtml(labels[item.type])} preview"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M8 21H3v-5m13 5h5v-5"/></svg></button>` : ''}</div><div class="media-meta"><span>${labels[item.type]}</span><time>${escapeHtml(item.date)} · ${escapeHtml(item.time)}</time></div></article>`;
 }
 
 function deduplicateParticipantMedia(items) {
@@ -466,6 +499,14 @@ function openMediaModal(item) {
   modal.showModal();
   modal.querySelector('.modal-close').onclick = () => modal.close();
   modal.onclick = (event) => { if (event.target === modal) modal.close(); };
+}
+
+function prefersReducedMotion() {
+  return matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+function yieldToBrowser() {
+  return new Promise((resolve) => requestAnimationFrame(() => resolve()));
 }
 
 function normalizeFilename(value) {
