@@ -61,7 +61,7 @@ dropzone.addEventListener('drop', (event) => {
 fileInput.addEventListener('change', () => fileInput.files[0] && analyze(fileInput.files[0]));
 
 async function readExport(file) {
-  if (file.name.toLowerCase().endsWith('.txt')) return { text: await file.text(), mediaEntries: new Map() };
+  if (file.name.toLowerCase().endsWith('.txt')) return { text: await file.text(), mediaEntries: new Map(), groupTitle: '' };
   if (!file.name.toLowerCase().endsWith('.zip')) throw new Error('Please choose a .zip or .txt export.');
   const zip = await JSZip.loadAsync(file);
   const textFiles = Object.values(zip.files).filter((entry) => !entry.dir && entry.name.toLowerCase().endsWith('.txt'));
@@ -72,7 +72,12 @@ async function readExport(file) {
     if (entry.dir || entry === likelyChat || entry.name.includes('__MACOSX/')) continue;
     mediaEntries.set(normalizeFilename(entry.name), entry);
   }
-  return { text: await likelyChat.async('string'), mediaEntries };
+  const groupTitle = file.name
+    .replace(/\.zip$/i, '')
+    .replace(/^WhatsApp Chat (?:with\s+|-\s*)/i, '')
+    .replace(/\s+\(\d+\)$/u, '')
+    .trim();
+  return { text: await likelyChat.async('string'), mediaEntries, groupTitle };
 }
 
 async function analyze(file) {
@@ -83,8 +88,8 @@ async function analyze(file) {
   try {
     setHeroGif();
     revokeMediaUrls();
-    const { text, mediaEntries } = await readExport(file);
-    const messages = parseTranscript(text);
+    const { text, mediaEntries, groupTitle } = await readExport(file);
+    const messages = parseTranscript(text, { groupTitle });
     if (!messages.length) throw new Error('No messages were recognized. The export format may not be supported yet.');
     status.textContent = 'Preparing media previews…';
     const mediaByUser = await prepareMedia(messages, mediaEntries);

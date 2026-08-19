@@ -18,19 +18,26 @@ function parseStart(line) {
 function splitSender(body) {
   const separator = body.indexOf(': ');
   if (separator < 1) return null;
-  return { sender: body.slice(0, separator).trim(), content: body.slice(separator + 2) };
+  return { sender: normalizeSender(body.slice(0, separator)), content: body.slice(separator + 2) };
 }
 
-export function parseTranscript(text) {
+export function normalizeSender(sender) {
+  return sender.replace(/^[~\s\u00a0\u202f]+/u, '').trim();
+}
+
+export function parseTranscript(text, { groupTitle = '' } = {}) {
   const messages = [];
   let current = null;
+  const normalizedGroupTitle = normalizeSender(groupTitle);
 
   for (const rawLine of text.replace(/\r\n?/g, '\n').split('\n')) {
     const start = parseStart(rawLine);
     if (start) {
       if (current) messages.push(current);
       const senderContent = splitSender(start.body);
-      current = senderContent ? { ...senderContent, date: start.date, time: start.time } : null;
+      current = senderContent && senderContent.sender !== normalizedGroupTitle
+        ? { ...senderContent, date: start.date, time: start.time }
+        : null;
     } else if (current) {
       current.content += `\n${rawLine}`;
     }
@@ -81,8 +88,7 @@ export function participantDisplayNames(rows) {
 }
 
 function parseParticipantName(sender) {
-  const cleaned = sender
-    .replace(/^[~\s\u00a0\u202f]+/u, '')
+  const cleaned = normalizeSender(sender)
     .replace(/\s*\([^)]*\)\s*/gu, ' ')
     .trim();
   const nameParts = cleaned
