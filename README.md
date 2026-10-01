@@ -1,28 +1,28 @@
 # Chatastrophe
 
-**Turn your WhatsApp chats into a playful recap. Find out who sends what.**
+**Turn a WhatsApp group export into a playful recap of who sends what, without the chat ever leaving your device.**
 
-Chatastrophe is a private, browser-based analyser for exported WhatsApp group chats. Drop in a chat export to explore the group's most-used stickers and GIFs, compare participant activity, and browse the media each person sent.
-
-Message text is never displayed. The selected export is processed locally in the browser and is not uploaded to a server.
-
-[**Try Chatastrophe →**](https://chatastrophe-rho.vercel.app/)
+[Try Chatastrophe →](https://chatastrophe-rho.vercel.app/)
 
 ![Chatastrophe landing page](assets/chatastrophe-landing.png)
 
-## Features
+## The problem
 
-- A sticker board featuring the eight most-used stickers and GIFs
-- A filterable participant scoreboard
-- First-message, first-sticker, and first-GIF dates
-- Per-participant galleries for stickers, GIFs, images, videos, voice notes, audio, and documents
-- Duplicate stickers and GIFs consolidated with usage counts
-- CSV summary downloads
-- Responsive desktop and mobile layouts
-- Support for common Android and iPhone export formats
-- Local-only chat processing with no database or upload endpoint
+Every WhatsApp group has its sticker spammer, its GIF person and its silent member, and everyone has a theory about who is who. WhatsApp shows none of this. Exporting the chat produces a ZIP of raw files that's useless on its own, and pasting a private group chat into an online tool means handing over everyone's messages.
 
-## Privacy
+## What it does
+
+- **A sticker board** of the group's eight most-used stickers and GIFs, with repeats merged and counted.
+- **A participant scoreboard** comparing who sent what, plus first-message, first-sticker and first-GIF dates.
+- **Galleries per person** for stickers, GIFs, images, videos, voice notes, audio and documents.
+- **CSV downloads** of the summary.
+- **Private by design:** the export is processed entirely in the browser, nothing is uploaded, and message text is never displayed.
+- **Works with Android and iPhone exports,** on desktop and mobile.
+
+<details>
+<summary><strong>Privacy, accuracy, tech stack & running locally</strong></summary>
+
+### Privacy
 
 Chatastrophe is designed so private chat data does not need to leave the device.
 
@@ -36,7 +36,7 @@ Chatastrophe is designed so private chat data does not need to leave the device.
 
 When deployed as a static website, the hosting provider serves the application files but does not receive the selected WhatsApp export through Chatastrophe.
 
-## How to use it
+### How to use it
 
 For the most complete analysis:
 
@@ -49,7 +49,7 @@ For the most complete analysis:
 
 A text-only export can still provide message counts, but it may not preserve enough information to distinguish or preview every media type.
 
-## Accuracy and limitations
+### Accuracy and limitations
 
 WhatsApp does not publish one universal export format. Formatting can vary by operating system, locale, language, and application version.
 
@@ -61,18 +61,16 @@ WhatsApp does not publish one universal export format. Formatting can vary by op
 - WhatsApp export limits may mean the file does not contain the complete history of a very large chat.
 - Participant names come from the exported transcript. Unsaved-contact markers are cleaned, and shared first names are expanded when enough name information is available.
 
-## Local development
+### Local development
 
-<details>
-<summary><strong>Run Chatastrophe locally</strong></summary>
 
-### Requirements
+#### Requirements
 
 - Node.js 20 or newer is recommended
 - npm
 - A modern browser with support for ES modules, object URLs, and the Web Crypto API
 
-### Installation
+#### Installation
 
 ```bash
 git clone <your-repository-url>
@@ -83,7 +81,7 @@ npm run dev
 
 Open the URL printed by Vite, normally `http://localhost:5173`.
 
-### Available commands
+#### Available commands
 
 ```bash
 npm run dev      # Start the development server
@@ -91,9 +89,8 @@ npm test         # Run parser tests once
 npm run build    # Create a production build in dist/
 ```
 
-</details>
 
-## How it works
+### How it works
 
 ```text
 WhatsApp ZIP
@@ -113,7 +110,7 @@ WhatsApp ZIP
 
 The main parser is in `src/parser.js`; application behavior is in `src/main.js`; and the responsive visual system is in `src/style.css`.
 
-### Media classification
+#### Media classification
 
 
 | Category   | Common export indicators                              |
@@ -127,7 +124,7 @@ The main parser is in `src/parser.js`; application behavior is in `src/main.js`;
 | Document   | PDF, Word, Excel, PowerPoint, and ZIP attachments     |
 
 
-## Testing
+### Testing
 
 The test suite covers common transcript formats, multiline messages, attachment classification, ambiguous media, and participant-name normalization.
 
@@ -144,7 +141,7 @@ npm run build
 
 When adding support for another export format, use anonymized transcript fixtures and avoid committing private chat exports or media.
 
-## Technology
+### Technology
 
 - Vanilla JavaScript and CSS
 - [Vite](https://vite.dev/) for development and builds
@@ -152,7 +149,7 @@ When adding support for another export format, use anonymized transcript fixture
 - [Vitest](https://vitest.dev/) for tests
 - Self-hosted Bricolage Grotesque variable font
 
-## Deployment
+### Deployment
 
 Chatastrophe is a static application, so the production `dist/` directory can be hosted on GitHub Pages, Netlify, Cloudflare Pages, or a similar service.
 
@@ -170,7 +167,7 @@ npm run build -- --base=/
 
 Publish the generated `dist/` directory using a GitHub Pages workflow or another static-hosting deployment process. Replace `your-repository-name` with the actual repository name.
 
-## Contributing
+### Contributing
 
 Contributions are welcome, particularly for:
 
@@ -182,10 +179,12 @@ Contributions are welcome, particularly for:
 
 Please avoid committing real chat transcripts, phone numbers, participant names, or private media. Use synthetic or thoroughly anonymized fixtures in tests and bug reports.
 
-## License
+### License
 
 An open-source license has not been selected yet. Add a `LICENSE` file before inviting others to reuse, modify, or redistribute the project.
 
-## Project status
+### Project status
 
 Chatastrophe is an early-stage project. Treat its output as a playful recap rather than an authoritative archive or compliance report.
+
+</details>
