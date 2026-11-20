@@ -189,6 +189,7 @@ button:active { transform: translateY(1px); }
 .motion-placeholder { display:grid;justify-items:center;gap:5px;color:var(--ink);text-align:center }.motion-placeholder b { padding:6px 9px;border:2px solid var(--ink);border-radius:8px;background:var(--yellow) }.motion-placeholder small { font-weight:750 }
 .leaderboard-card,.gallery-section { content-visibility:auto;contain-intrinsic-size:auto 700px }
 footer { display:flex;align-items:center;justify-content:center;margin-top:60px;color:#405561;font-size:12px;font-weight:700;text-align:center }
+footer a { color:inherit;text-underline-offset:2px }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
