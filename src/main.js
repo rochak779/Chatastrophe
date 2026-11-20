@@ -38,7 +38,7 @@ document.querySelector('#app').innerHTML = `
     </div>
   </section>
   <section id="results" class="results" hidden></section>
-  <footer><span>C</span> Chatastrophe · Built for group chat historians. No chat data leaves this page.</footer>
+  <footer><span>C</span> <div>Chatastrophe · Built for group chat historians. No chat data leaves this page. Built by <a href="https://www.rochakagarwal.com">Rochak Agarwal</a>.</div></footer>
 `;
 
 const fileInput = document.querySelector('#file');
