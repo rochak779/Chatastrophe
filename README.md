@@ -188,3 +188,7 @@ An open-source license has not been selected yet. Add a `LICENSE` file before in
 Chatastrophe is an early-stage project. Treat its output as a playful recap rather than an authoritative archive or compliance report.
 
 </details>
+
+---
+
+Built by [Rochak Agarwal](https://www.rochakagarwal.com). More of my work is at [rochakagarwal.com](https://www.rochakagarwal.com).
